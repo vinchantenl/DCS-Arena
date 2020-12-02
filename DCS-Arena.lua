@@ -4,7 +4,7 @@ UnitNr = 1
 BlueTickets = 100
 RedTickets = 100
 
-samresupplytimer = 60
+Samresupplytimer = 60
 
 UnitTable = {}
 
@@ -21,21 +21,21 @@ LogisticsClientSet = SET_CLIENT:New():FilterCoalitions("blue"):FilterStart()
 
 local MissionSchedule = SCHEDULER:New( nil, 
   function()
-	resupplyScheduleCheck()
+	ResupplyScheduleCheck()
   end, {}, 1, 10
   )
   
-function resupplyScheduleCheck()
+function ResupplyScheduleCheck()
 	if ActiveUnits ~= nil then 
 		for k,v in pairs(ActiveUnits) do
 			if string.match(k,"sam_sr") or string.match(k,"sam_lr") then
-				if timer.getAbsTime() - v > samresupplytimer then
+				if timer.getAbsTime() - v > Samresupplytimer then
 					MessageAll = MESSAGE:New( k,  25):ToAll()
 					SuppliedUnit = GROUP:FindByName( k )
 					local supplyMarkerLoc = SuppliedUnit:GetCoordinate()
 					SuppliedUnit:SetAIOff()
 					local suppliedUnitName = SuppliedUnit:GetName()
-					mymarker=MARKER:New(supplyMarkerLoc, "Please Resupply this unit!"):ToAll()
+					Mymarker=MARKER:New(supplyMarkerLoc, "Please Resupply this unit!"):ToAll()
 					
 					--create resupplyzone
 					ZoneA = ZONE_GROUP:New( k, SuppliedUnit, 200 )
@@ -70,27 +70,27 @@ function SpawnUnitCheck(coord, coalition, text)
 	Unitcost = UnitTable[text]
 	if Unitcost ~= nil then	
 		if coalition == 1 then
-			tickets = RedTickets
+			Tickets = RedTickets
 		elseif coalition == 2 then
-			tickets = BlueTickets
+			Tickets = BlueTickets
 		end
 			
-		if tickets < Unitcost then
+		if Tickets < Unitcost then
 			MessageAll = MESSAGE:New( "Onvoldoende Tickets!",  25):ToCoalition(coalition)
 		else
 			
-			tickets = tickets - Unitcost
+			Tickets = Tickets - Unitcost
 			if coalition == 2 then
-				BlueTickets = tickets
+				BlueTickets = Tickets
 			elseif coalition == 1 then
-				RedTickets = tickets
+				RedTickets = Tickets
 			end
 			
 			SpawnUnit(coord, coalition, text)
 			
-			MessageAll = MESSAGE:New( "Tickets: "..tickets,  25):ToCoalition(coalition)
+			MessageAll = MESSAGE:New( "Tickets: "..Tickets,  25):ToCoalition(coalition)
 			MessageAll = MESSAGE:New( "Unitcost: "..Unitcost,  25):ToCoalition(coalition)
-			MessageAll = MESSAGE:New( tickets.." Tickets over",  25):ToCoalition(coalition)
+			MessageAll = MESSAGE:New( Tickets.." Tickets over",  25):ToCoalition(coalition)
 		end
 	else
 		MessageAll = MESSAGE:New( "Ongeldige Unit!",  25):ToCoalition(coalition)
@@ -106,7 +106,7 @@ function SpawnUnit(coord, coalition, text)
 	UnitNr = UnitNr + 1
 end
 
-function markRemoved(Event)
+function MarkRemoved(Event)
     if Event.text~=nil then 
         local text = Event.text:lower()
         local vec3 = {z=Event.pos.z, x=Event.pos.x}
@@ -124,7 +124,7 @@ function SupportHandler:onEvent(Event)
         -- env.info(string.format("BTI: Support got event CHANGE id %s idx %s coalition %s group %s text %s", Event.id, Event.idx, Event.coalition, Event.groupID, Event.text))
     elseif Event.id == world.event.S_EVENT_MARK_REMOVED then
         -- env.info(string.format("BTI: Support got event REMOVED id %s idx %s coalition %s group %s text %s", Event.id, Event.idx, Event.coalition, Event.groupID, Event.text))
-        markRemoved(Event)
+        MarkRemoved(Event)
     end
 end
 
