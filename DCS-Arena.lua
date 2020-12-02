@@ -24,7 +24,8 @@ local MissionSchedule = SCHEDULER:New( nil,
 	ResupplyScheduleCheck()
   end, {}, 1, 10
   )
-  
+
+--supply funtions
 function ResupplyScheduleCheck()
 	if ActiveUnits ~= nil then 
 		for k,v in pairs(ActiveUnits) do
@@ -43,12 +44,14 @@ function ResupplyScheduleCheck()
 
 					LogisticsClientSet:ForEachClientInZone(ZoneA, function(client)
 							if (client ~= nil) and (client:IsAlive()) then 
-								local group = client:GetGroup()
-								SuppliedUnit:SetAIOn()
-								
-								
-								ActiveUnits[suppliedUnitName] = timer.getAbsTime()
-								MessageAll = MESSAGE:New( suppliedUnitName,  25):ToAll()
+								if client:InAir() == false then
+									local group = client:GetGroup()
+									SuppliedUnit:SetAIOn()
+									
+									
+									ActiveUnits[suppliedUnitName] = timer.getAbsTime()
+									MessageAll = MESSAGE:New( suppliedUnitName,  25):ToAll()
+								end
 							end
 						end
 					)
@@ -56,6 +59,18 @@ function ResupplyScheduleCheck()
 			end
 		end
 	end
+end
+
+function SupplyCrateLoad(coalition)
+	local SupplyCrateName = ReturnCoalitionName(coalition).." Supply Crate"
+	local SupplyCrateCoords = SupplyCrateName:GetCoordinate()
+	local SupplyCrate = STATIC:FindByName(SupplyCrateName, false)
+
+	ZoneA = ZONE_GROUP:New( SupplyCrateName, SupplyCrate, 100 )
+	ZoneA:FlareZone( FLARECOLOR.Red, 90, 60 )
+
+	
+
 end
 
 function ReturnCoalitionName(coalition)
