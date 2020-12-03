@@ -15,6 +15,8 @@ UnitTable["sam_lr"] = 40 	-- long range S300 / Patriot
 
 ActiveUnits = {}
 
+LogisticsTable = {}
+
 LogisticsClientSet = SET_CLIENT:New():FilterCoalitions("blue"):FilterStart()
 --RedLogisticsClientSet = SET_CLIENT:New():FilterActive():FilterCoalition( "red" ):FilterPrefixes("Transport"):FilterStart()
 
@@ -22,6 +24,7 @@ LogisticsClientSet = SET_CLIENT:New():FilterCoalitions("blue"):FilterStart()
 local MissionSchedule = SCHEDULER:New( nil, 
   function()
 	ResupplyScheduleCheck()
+	SupplyCrateLoad(2)
   end, {}, 1, 10
   )
 
@@ -44,13 +47,11 @@ function ResupplyScheduleCheck()
 
 					LogisticsClientSet:ForEachClientInZone(ZoneA, function(client)
 							if (client ~= nil) and (client:IsAlive()) then 
-								if client:InAir() == false then
-									local group = client:GetGroup()
+								if (client:InAir() == false) and (LogisticsTable[client:Name()] == "logistics") then
+									LogisticsTable[client:Name()] = nil
 									SuppliedUnit:SetAIOn()
-									
-									
 									ActiveUnits[suppliedUnitName] = timer.getAbsTime()
-									MessageAll = MESSAGE:New( suppliedUnitName,  25):ToAll()
+									MessageAll = MESSAGE:New( "Sam Resupplied",  25):ToAll()
 								end
 							end
 						end
@@ -61,14 +62,34 @@ function ResupplyScheduleCheck()
 	end
 end
 
-function SupplyCrateLoad(coalition)
-	local SupplyCrateName = ReturnCoalitionName(coalition).." Supply Crate"
-	local SupplyCrateCoords = SupplyCrateName:GetCoordinate()
-	local SupplyCrate = STATIC:FindByName(SupplyCrateName, false)
+function SupplyCrateLoad()
+	for i = 1, 2, 1
+		do
+			local SupplyCrateName = ReturnCoalitionName(i).." Supply Crate"
 
-	ZoneA = ZONE_GROUP:New( SupplyCrateName, SupplyCrate, 100 )
-	ZoneA:FlareZone( FLARECOLOR.Red, 90, 60 )
+			local SupplyCrate = STATIC:FindByName(SupplyCrateName, false)
+			if SupplyCrate ~= nil then
+				local SupplyCrateCoords = SupplyCrate:GetCoordinate()
+				
+				ZoneCrate = ZONE_GROUP:New( SupplyCrateName, SupplyCrate, 50 )
+				ZoneCrate:FlareZone( FLARECOLOR.Red, 90, 60 )
 
+				LogisticsClientSet:ForEachClientInZone(ZoneCrate, function(client)
+					if (client ~= nil) and (client:IsAlive()) then 
+						if client:InAir() == false then
+							if LogisticsTable[client:Name()] == nil then
+								--pick up logistics crate
+								MessageAll = MESSAGE:New( client:Name(),  25):ToAll()
+								LogisticsTable[client:Name()] = "logistics"
+							else
+								MessageAll = MESSAGE:New( client:Name().. "heeft al een krat aan boord van type: "..LogisticsTable[client:Name()],  25):ToAll()
+							end
+						end
+					end
+				end
+				)
+			end
+		end
 	
 
 end
