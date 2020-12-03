@@ -1,0 +1,1 @@
+--DCS-Arena.lua placeholder
