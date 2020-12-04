@@ -13,13 +13,14 @@ UnitTable["aaa"] = 10		-- aaa
 UnitTable["sam_sr"] = 20 	-- short range Sa-6 / Hawk
 UnitTable["sam_lr"] = 40 	-- long range S300 / Patriot
 
+--spawned units
 ActiveUnits = {}
 
+--table containing transport units and their crates
 LogisticsTable = {}
 
-LogisticsClientSet = SET_CLIENT:New():FilterCoalitions("blue"):FilterStart()
---RedLogisticsClientSet = SET_CLIENT:New():FilterActive():FilterCoalition( "red" ):FilterPrefixes("Transport"):FilterStart()
-
+--select all Tansport Units
+LogisticsClientSet = SET_CLIENT:New():FilterPrefixes("Transport"):FilterStart()
 
 local MissionSchedule = SCHEDULER:New( nil, 
   function()
@@ -34,11 +35,12 @@ function ResupplyScheduleCheck()
 		for k,v in pairs(ActiveUnits) do
 			if string.match(k,"sam_sr") or string.match(k,"sam_lr") then
 				if timer.getAbsTime() - v > Samresupplytimer then
-					MessageAll = MESSAGE:New( k,  25):ToAll()
 					SuppliedUnit = GROUP:FindByName( k )
-					local supplyMarkerLoc = SuppliedUnit:GetCoordinate()
+					-- turn off AI to force resupply mission
 					SuppliedUnit:SetAIOff()
-					local suppliedUnitName = SuppliedUnit:GetName()
+
+					--create map marker for resupply mission
+					local supplyMarkerLoc = SuppliedUnit:GetCoordinate()
 					Mymarker=MARKER:New(supplyMarkerLoc, "Please Resupply this unit!"):ToAll()
 					
 					--create resupplyzone
@@ -48,9 +50,16 @@ function ResupplyScheduleCheck()
 					LogisticsClientSet:ForEachClientInZone(ZoneA, function(client)
 							if (client ~= nil) and (client:IsAlive()) then 
 								if (client:InAir() == false) and (LogisticsTable[client:Name()] == "logistics") then
+									--reset unit crate state
 									LogisticsTable[client:Name()] = nil
+									
+									--turn AI back on after resupply
 									SuppliedUnit:SetAIOn()
+
+									--reset Unit timer
+									local suppliedUnitName = SuppliedUnit:GetName()
 									ActiveUnits[suppliedUnitName] = timer.getAbsTime()
+									--debug message to show resupply occured
 									MessageAll = MESSAGE:New( "Sam Resupplied",  25):ToAll()
 								end
 							end
@@ -65,12 +74,12 @@ end
 function SupplyCrateLoad()
 	for i = 1, 2, 1
 		do
+			-- static unit representing logistics pickup zone
 			local SupplyCrateName = ReturnCoalitionName(i).." Supply Crate"
-
 			local SupplyCrate = STATIC:FindByName(SupplyCrateName, false)
 			if SupplyCrate ~= nil then
 				local SupplyCrateCoords = SupplyCrate:GetCoordinate()
-				
+				--zone surrounding the logisticscrate
 				ZoneCrate = ZONE_GROUP:New( SupplyCrateName, SupplyCrate, 50 )
 				ZoneCrate:FlareZone( FLARECOLOR.Red, 90, 60 )
 
@@ -78,10 +87,11 @@ function SupplyCrateLoad()
 					if (client ~= nil) and (client:IsAlive()) then 
 						if client:InAir() == false then
 							if LogisticsTable[client:Name()] == nil then
-								--pick up logistics crate
+								--pick up logistics crate, add unit name and crate type to LogisticsTable
 								MessageAll = MESSAGE:New( client:Name(),  25):ToAll()
 								LogisticsTable[client:Name()] = "logistics"
 							else
+								--show that the unit already has a crate
 								MessageAll = MESSAGE:New( client:Name().. "heeft al een krat aan boord van type: "..LogisticsTable[client:Name()],  25):ToAll()
 							end
 						end
