@@ -16,7 +16,7 @@ UnitTable["sam_lr"] = 40 	-- long range S300 / Patriot
 --spawned units
 ActiveUnits = {}
 
---table containing transport units and their crates
+--table coztaining transport units and their crates
 LogisticsTable = {}
 
 --select all Tansport Units
@@ -173,5 +173,5 @@ function SupportHandler:onEvent(Event)
         MarkRemoved(Event)
     end
 end
-
+--tests
 world.addEventHandler(SupportHandler)
