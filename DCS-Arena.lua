@@ -55,7 +55,8 @@ local MissionSchedule = SCHEDULER:New( nil,
 function ResupplyScheduleCheck()
 	if ActiveUnits ~= nil then 
 		for k,v in pairs(ActiveUnits) do
-			if string.match(k,"sam_sr") or string.match(k,"sam_lr") then
+			--changed to more generic "sam" selectors
+			if string.match(k,"sam") then
 				if timer.getAbsTime() - v > Samresupplytimer then
 					MessageAll = MESSAGE:New( k,  25):ToAll()
 					SuppliedUnit = GROUP:FindByName( k )
