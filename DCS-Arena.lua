@@ -1,8 +1,9 @@
 SupportHandler = EVENTHANDLER:New()
+
 UnitNr = 1
 
-BlueTickets = 100
-RedTickets = 100
+BlueTickets = 200
+RedTickets = 200
 
 Samresupplytimer = 60
 
@@ -10,22 +11,43 @@ UnitTable = {}
 
 UnitTable["tank"] = 10		-- MBT
 UnitTable["aaa"] = 10		-- aaa 
-UnitTable["sam_sr"] = 20 	-- short range Sa-6 / Hawk
-UnitTable["sam_lr"] = 40 	-- long range S300 / Patriot
+UnitTable["samsr"] = 20 	-- short range Sa-6 / Hawk
+UnitTable["sampd"] = 20	-- sam-point defence Sa-15 / Roland
+UnitTable["samlr"] = 40 	-- long range S300 / Patriot
 
---spawned units
+ClientCost = {}
+
+ClientCost["A-10C_2"] = 5
+ClientCost["FA-18C_hornet"] = 5
+ClientCost["L-39ZA"] = 2
+ClientCost["M-2000C"] = 5
+ClientCost["TF-51D"] = 1
+ClientCost["AJS37"] = 5
+ClientCost["AV8BNA"] = 5
+ClientCost["C-101CC"] = 2
+ClientCost["F-14A-135-GR"] = 5
+ClientCost["F-14B"] = 5
+ClientCost["F-15C"] = 4
+ClientCost["F-16C_50"] = 5
+ClientCost["F-5E-3"] = 3
+ClientCost["UH-1H"] = 2
+ClientCost["Mi-8MT"] = 2
+	
+
 ActiveUnits = {}
 
---table coztaining transport units and their crates
 LogisticsTable = {}
 
---select all Tansport Units
 LogisticsClientSet = SET_CLIENT:New():FilterPrefixes("Transport"):FilterStart()
+--RedLogisticsClientSet = SET_CLIENT:New():FilterActive():FilterCoalition( "red" ):FilterPrefixes("Transport"):FilterStart()
+
 
 local MissionSchedule = SCHEDULER:New( nil, 
   function()
 	ResupplyScheduleCheck()
 	SupplyCrateLoad(2)
+	MessageAll = MESSAGE:New( BlueTickets,  25):ToAll()
+	MessageAll = MESSAGE:New( RedTickets,  25):ToAll()
   end, {}, 1, 10
   )
 
@@ -35,31 +57,31 @@ function ResupplyScheduleCheck()
 		for k,v in pairs(ActiveUnits) do
 			if string.match(k,"sam_sr") or string.match(k,"sam_lr") then
 				if timer.getAbsTime() - v > Samresupplytimer then
+					MessageAll = MESSAGE:New( k,  25):ToAll()
 					SuppliedUnit = GROUP:FindByName( k )
-					-- turn off AI to force resupply mission
+					local suppliedUnitName = SuppliedUnit:GetName()
+
+					-- disable SAM site to simulate out of resources
 					SuppliedUnit:SetAIOff()
 
-					--create map marker for resupply mission
+					-- create marker for resupply
 					local supplyMarkerLoc = SuppliedUnit:GetCoordinate()
 					Mymarker=MARKER:New(supplyMarkerLoc, "Please Resupply this unit!"):ToAll()
 					
 					--create resupplyzone
 					ZoneA = ZONE_GROUP:New( k, SuppliedUnit, 200 )
+					--debug flares
 					ZoneA:FlareZone( FLARECOLOR.White, 90, 60 )
 
 					LogisticsClientSet:ForEachClientInZone(ZoneA, function(client)
 							if (client ~= nil) and (client:IsAlive()) then 
 								if (client:InAir() == false) and (LogisticsTable[client:Name()] == "logistics") then
-									--reset unit crate state
 									LogisticsTable[client:Name()] = nil
-									
-									--turn AI back on after resupply
+									-- re-enable sam to simulate resupply
 									SuppliedUnit:SetAIOn()
 
-									--reset Unit timer
-									local suppliedUnitName = SuppliedUnit:GetName()
+									-- reset resuppoly timer
 									ActiveUnits[suppliedUnitName] = timer.getAbsTime()
-									--debug message to show resupply occured
 									MessageAll = MESSAGE:New( "Sam Resupplied",  25):ToAll()
 								end
 							end
@@ -74,12 +96,12 @@ end
 function SupplyCrateLoad()
 	for i = 1, 2, 1
 		do
-			-- static unit representing logistics pickup zone
 			local SupplyCrateName = ReturnCoalitionName(i).." Supply Crate"
+
 			local SupplyCrate = STATIC:FindByName(SupplyCrateName, false)
 			if SupplyCrate ~= nil then
 				local SupplyCrateCoords = SupplyCrate:GetCoordinate()
-				--zone surrounding the logisticscrate
+				
 				ZoneCrate = ZONE_GROUP:New( SupplyCrateName, SupplyCrate, 50 )
 				ZoneCrate:FlareZone( FLARECOLOR.Red, 90, 60 )
 
@@ -87,11 +109,10 @@ function SupplyCrateLoad()
 					if (client ~= nil) and (client:IsAlive()) then 
 						if client:InAir() == false then
 							if LogisticsTable[client:Name()] == nil then
-								--pick up logistics crate, add unit name and crate type to LogisticsTable
+								--pick up logistics crate
 								MessageAll = MESSAGE:New( client:Name(),  25):ToAll()
 								LogisticsTable[client:Name()] = "logistics"
 							else
-								--show that the unit already has a crate
 								MessageAll = MESSAGE:New( client:Name().. "heeft al een krat aan boord van type: "..LogisticsTable[client:Name()],  25):ToAll()
 							end
 						end
@@ -163,6 +184,44 @@ function MarkRemoved(Event)
     end
 end
 
+function BirthDetected(Event)
+	env.info("Birth Detected")
+	if Event.IniPlayerName ~= nil then
+		local initiator = Event.IniPlayerName
+		local initiator_type = Event.IniTypeName
+		local initiator_coalition = Event.IniCoalition
+		local initiator_cost = ClientCost[initiator_type]
+		if initiator_coalition == 1 then
+			RedTickets = RedTickets - initiator_cost
+		elseif initiator_coalition ==2 then
+			BlueTickets = BlueTickets - initiator_cost
+		end
+		env.info("New Player: " .. initiator .. ", Type: ".. initiator_type.. ", Cost: ".. initiator_cost.. ", Coalition: ".. initiator_coalition)
+		MessageAll = MESSAGE:New( "Tickets remaining: " .. BlueTickets,  25):ToAll()
+	end
+end
+
+function KillDetected(Event)
+		local targetType = Event.TgtTypeName
+		local targetCoalition = Event.TgtCoalition
+
+		if ClientCost[targetType] ~= nil then
+			local TicketsEarned = ClientCost[targetType]
+			if targetCoalition == 1 then
+				RedTickets = RedTickets + TicketsEarned
+			elseif targetCoalition ==2 then
+				BlueTickets = BlueTickets + TicketsEarned
+			end
+		else
+			if targetCoalition == 1 then
+				RedTickets = RedTickets + 2
+			elseif targetCoalition ==2 then
+				BlueTickets = BlueTickets + 2
+			end
+		end
+
+end
+
 function SupportHandler:onEvent(Event)
     if Event.id == world.event.S_EVENT_MARK_ADDED then
         -- env.info(string.format("BTI: Support got event ADDED id %s idx %s coalition %s group %s text %s", Event.id, Event.idx, Event.coalition, Event.groupID, Event.text))
@@ -170,8 +229,17 @@ function SupportHandler:onEvent(Event)
         -- env.info(string.format("BTI: Support got event CHANGE id %s idx %s coalition %s group %s text %s", Event.id, Event.idx, Event.coalition, Event.groupID, Event.text))
     elseif Event.id == world.event.S_EVENT_MARK_REMOVED then
         -- env.info(string.format("BTI: Support got event REMOVED id %s idx %s coalition %s group %s text %s", Event.id, Event.idx, Event.coalition, Event.groupID, Event.text))
-        MarkRemoved(Event)
+		MarkRemoved(Event)
+	elseif Event.id == world.event.S_EVENT_BIRTH then
+		--birth detected
+		BirthDetected(Event)
+	elseif Event.id == world.event.S_EVENT_KILL then
+		--death detected
+		--needs fixing
+		--KillDetected()
+	elseif Event.id == world.event.S_EVENT_LAND then
+		--landing detected
     end
 end
---tests
+
 world.addEventHandler(SupportHandler)
