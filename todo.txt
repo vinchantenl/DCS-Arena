@@ -1,0 +1,7 @@
+-new marker weghalen
+-ticket log maken
+-ticketsaldo opvragen
+-levens terug bij landen
+-dynamische zones selecteren
+-spawnen binnen zone beperken
+-F2 beperken

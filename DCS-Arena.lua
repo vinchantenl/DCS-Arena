@@ -18,6 +18,7 @@ UnitTable["samlr"] = 40 	-- long range S300 / Patriot
 ClientCost = {}
 
 ClientCost["A-10C_2"] = 5
+ClientCost["Su-25T"] = 5
 ClientCost["FA-18C_hornet"] = 5
 ClientCost["L-39ZA"] = 2
 ClientCost["M-2000C"] = 5
@@ -83,7 +84,7 @@ function CheckUnitsNearHQ()
 				HQZone = "B"..BlueHQ
 			end
 			Zone = ZONE:FindByName( HQZone )
-			Zone:FlareZone( FLARECOLOR.Red, 90, 60 )
+			--Zone:FlareZone( FLARECOLOR.Red, 90, 60 )
 			
 			Zone:Scan({Object.Category.UNIT}, coalition.side.BLUE)
 			if Zone:IsNoneInZoneOfCoalition(coalition.side.BLUE) == true then
