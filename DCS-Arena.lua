@@ -2,17 +2,17 @@ SupportHandler = EVENTHANDLER:New()
 
 UnitNr = 1
 
-BlueTickets = 200
-RedTickets = 200
+BlueTickets = 400
+RedTickets = 400
 
-Samresupplytimer = 60
+Samresupplytimer = 6000
 
 UnitTable = {}
 
 UnitTable["tank"] = 10		-- MBT
 UnitTable["aaa"] = 10		-- aaa 
 UnitTable["samsr"] = 20 	-- short range Sa-6 / Hawk
-UnitTable["sampd"] = 20	-- sam-point defence Sa-15 / Roland
+UnitTable["sampd"] = 20		-- sam-point defence Sa-15 / Roland
 UnitTable["samlr"] = 40 	-- long range S300 / Patriot
 
 ClientCost = {}
@@ -32,24 +32,65 @@ ClientCost["F-16C_50"] = 5
 ClientCost["F-5E-3"] = 3
 ClientCost["UH-1H"] = 2
 ClientCost["Mi-8MT"] = 2
-	
 
 ActiveUnits = {}
 
 LogisticsTable = {}
 
 LogisticsClientSet = SET_CLIENT:New():FilterPrefixes("Transport"):FilterStart()
---RedLogisticsClientSet = SET_CLIENT:New():FilterActive():FilterCoalition( "red" ):FilterPrefixes("Transport"):FilterStart()
+GroundUnitsSet = SET_UNIT:New():FilterCategories("ground"):FilterStart()
 
+BlueHQ = math.random (1)
+RedHQ = math.random (1)
+
+function SpawnHq(BlueHQ, RedHQ)
+	for i = 1, 2, 1
+		do
+			if i == 1 then
+				HQZone = "R"..RedHQ
+				HQName = "Red HQ"
+				HQCountry = country.id.RUSSIA
+			elseif i == 2 then
+				HQZone = "B"..BlueHQ
+				HQName = "Blue HQ"
+				HQCountry = country.id.USA
+			end
+			
+			local HQSpawnBuilding = SPAWNSTATIC:NewFromType("Tech combine", "Structures", HQCountry)
+			local Zone = ZONE:FindByName( HQZone)
+			local HQBuilding = HQSpawnBuilding:SpawnFromZone(Zone, 0, HQName )
+		end
+end
+--spawn HQ on 1 of 5 zones
+SpawnHq(BlueHQ, RedHQ)
 
 local MissionSchedule = SCHEDULER:New( nil, 
   function()
-	ResupplyScheduleCheck()
+	--disabled for now
+	--ResupplyScheduleCheck()
 	SupplyCrateLoad(2)
-	MessageAll = MESSAGE:New( BlueTickets,  25):ToAll()
-	MessageAll = MESSAGE:New( RedTickets,  25):ToAll()
+	--CheckUnitsNearHQ()
   end, {}, 1, 10
   )
+
+function CheckUnitsNearHQ()
+	for i = 1, 2, 1
+		do
+			--set HQZone
+			if i == 1 then
+				HQZone = "R"..RedHQ
+			elseif i == 2 then
+				HQZone = "B"..BlueHQ
+			end
+			Zone = ZONE:FindByName( HQZone )
+			Zone:FlareZone( FLARECOLOR.Red, 90, 60 )
+			
+			Zone:Scan({Object.Category.UNIT}, coalition.side.BLUE)
+			if Zone:IsNoneInZoneOfCoalition(coalition.side.BLUE) == true then
+				MessageAll = MESSAGE:New( "Unit still in "..HQZone,  25):ToAll()
+			end
+		end
+end
 
 --supply funtions
 function ResupplyScheduleCheck()
@@ -202,24 +243,31 @@ function BirthDetected(Event)
 end
 
 function KillDetected(Event)
-		local targetType = Event.TgtTypeName
-		local targetCoalition = Event.TgtCoalition
-
-		if ClientCost[targetType] ~= nil then
-			local TicketsEarned = ClientCost[targetType]
-			if targetCoalition == 1 then
-				RedTickets = RedTickets + TicketsEarned
-			elseif targetCoalition ==2 then
-				BlueTickets = BlueTickets + TicketsEarned
-			end
-		else
-			if targetCoalition == 1 then
-				RedTickets = RedTickets + 2
-			elseif targetCoalition ==2 then
-				BlueTickets = BlueTickets + 2
-			end
+	local targetType = Event.TgtTypeName
+	local targetCoalition = Event.TgtCoalition
+	if ClientCost[targetType] ~= nil then
+		local TicketsEarned = ClientCost[targetType]
+		if targetCoalition == 1 then
+			RedTickets = RedTickets + TicketsEarned
+		elseif targetCoalition ==2 then
+			BlueTickets = BlueTickets + TicketsEarned
 		end
+	else
+		if targetCoalition == 1 then
+			RedTickets = RedTickets + 2
+		elseif targetCoalition ==2 then
+			BlueTickets = BlueTickets + 2
+		end
+	end
+end
 
+function DeadObjectDetected(Event)
+	local DeadObject = Event.IniUnitName
+	if DeadObject == "Blue HQ" then
+		MessageAll = MESSAGE:New( DeadObject.."is destroyed",  100):ToAll()
+	elseif DeadObject == "Red HQ" then
+		MessageAll = MESSAGE:New( DeadObject.."is destroyed",  100):ToAll()
+	end
 end
 
 function SupportHandler:onEvent(Event)
@@ -235,8 +283,10 @@ function SupportHandler:onEvent(Event)
 		BirthDetected(Event)
 	elseif Event.id == world.event.S_EVENT_KILL then
 		--death detected
-		--needs fixing
-		--KillDetected()
+		--KillDetected(Event)
+	elseif Event.id == world.event.S_EVENT_DEAD then
+		--death detected
+		DeadObjectDetected(Event)
 	elseif Event.id == world.event.S_EVENT_LAND then
 		--landing detected
     end
