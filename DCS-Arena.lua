@@ -40,8 +40,8 @@ LogisticsTable = {}
 LogisticsClientSet = SET_CLIENT:New():FilterPrefixes("Transport"):FilterStart()
 GroundUnitsSet = SET_UNIT:New():FilterCategories("ground"):FilterStart()
 
-BlueHQ = math.random (1)
-RedHQ = math.random (1)
+BlueHQ = math.random (5)
+RedHQ = math.random (5)
 
 function SpawnHq(BlueHQ, RedHQ)
 	for i = 1, 2, 1
