@@ -5,6 +5,8 @@ UnitNr = 1
 BlueTickets = 400
 RedTickets = 400
 
+SpawnTimerLimit = 900
+
 Samresupplytimer = 6000
 
 UnitTable = {}
@@ -178,32 +180,36 @@ end
 
 function SpawnUnitCheck(coord, coalition, text)
 	Unitcost = UnitTable[text]
-	if Unitcost ~= nil then	
-		if coalition == 1 then
-			Tickets = RedTickets
-		elseif coalition == 2 then
-			Tickets = BlueTickets
-		end
-			
-		if Tickets < Unitcost then
-			MessageAll = MESSAGE:New( "Onvoldoende Tickets!",  25):ToCoalition(coalition)
-		else
-			
-			Tickets = Tickets - Unitcost
-			if coalition == 2 then
-				BlueTickets = Tickets
-			elseif coalition == 1 then
-				RedTickets = Tickets
+	if timer.getAbsTime() < SpawnTimerLimit then
+		if Unitcost ~= nil then	
+			if coalition == 1 then
+				Tickets = RedTickets
+			elseif coalition == 2 then
+				Tickets = BlueTickets
 			end
-			
-			SpawnUnit(coord, coalition, text)
-			
-			MessageAll = MESSAGE:New( "Tickets: "..Tickets,  25):ToCoalition(coalition)
-			MessageAll = MESSAGE:New( "Unitcost: "..Unitcost,  25):ToCoalition(coalition)
-			MessageAll = MESSAGE:New( Tickets.." Tickets over",  25):ToCoalition(coalition)
+				
+			if Tickets < Unitcost then
+				MessageAll = MESSAGE:New( "Onvoldoende Tickets!",  25):ToCoalition(coalition)
+			else
+				
+				Tickets = Tickets - Unitcost
+				if coalition == 2 then
+					BlueTickets = Tickets
+				elseif coalition == 1 then
+					RedTickets = Tickets
+				end
+				
+				SpawnUnit(coord, coalition, text)
+				
+				MessageAll = MESSAGE:New( "Tickets: "..Tickets,  25):ToCoalition(coalition)
+				MessageAll = MESSAGE:New( "Unitcost: "..Unitcost,  25):ToCoalition(coalition)
+				MessageAll = MESSAGE:New( Tickets.." Tickets over",  25):ToCoalition(coalition)
+			end
+		else
+			MessageAll = MESSAGE:New( "Ongeldige Unit!",  25):ToCoalition(coalition)
 		end
 	else
-		MessageAll = MESSAGE:New( "Ongeldige Unit!",  25):ToCoalition(coalition)
+		MessageAll = MESSAGE:New( "Instant spawn placement timer expired!",  25):ToCoalition(coalition)
 	end
 end
 
@@ -266,9 +272,9 @@ end
 function DeadObjectDetected(Event)
 	local DeadObject = Event.IniUnitName
 	if DeadObject == "Blue HQ" then
-		MessageAll = MESSAGE:New( DeadObject.."is destroyed",  100):ToAll()
+		MessageAll = MESSAGE:New( DeadObject.." is destroyed",  100):ToAll()
 	elseif DeadObject == "Red HQ" then
-		MessageAll = MESSAGE:New( DeadObject.."is destroyed",  100):ToAll()
+		MessageAll = MESSAGE:New( DeadObject.." is destroyed",  100):ToAll()
 	end
 end
 
