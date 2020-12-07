@@ -5,15 +5,19 @@ nu:
 -spawn tijslimiet < nog testen
 -dynamische zones selecteren
 -Tech combine veranderen naar command post
+-Paladin toevoegen met de abbreviation artillery
 korte termijn:
--sam skill level checken
--spawnen binnen zone beperken
+-sam skill level checken (ik heb trouwens alle ground units in de templates van skill level average naar random gezet)
+-spawnen van grondunits binnen zone beperken
 -killtickets
--15min wachttijd voor initiele takeoff/slotblock?
+-15min wachttijd voor initiele takeoff/slotblock? (slotblock is nodig om op de F10 map te komen. althans voor mij want anders kan ik via escape niet meer terug naar het menu om een rol te kiezen. Oplossen met een trigger?)
 Lange termijn:
--F2 beperken
+-F2 beperken (al gedaan. fog of war staat nog wel aan)
 -levens terug bij landen
 -smoke op HQ bij inzone?
+-mogelijkheid om een invisible farp + fuel + ammo + commandpost te spawnen (binnen spawnzone)
+-limiet op tickets uitgeven zetten zodat er altijd minimaal 100 over blijven om vliegtuigen in te spawnen?
+
 
 
 
