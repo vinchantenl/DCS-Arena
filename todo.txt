@@ -1,12 +1,23 @@
+Todo:
+nu:
 -ticket log maken
 -ticketsaldo opvragen
--levens terug bij landen
--killtickets
 -spawn tijslimiet < nog testen
 -dynamische zones selecteren
--spawnen binnen zone beperken
--sam skill level checken
--F2 beperken
 -Tech combine veranderen naar command post
+korte termijn:
+-sam skill level checken
+-spawnen binnen zone beperken
+-killtickets
 -15min wachttijd voor initiele takeoff/slotblock?
+Lange termijn:
+-F2 beperken
+-levens terug bij landen
 -smoke op HQ bij inzone?
+
+
+
+
+
+
+
