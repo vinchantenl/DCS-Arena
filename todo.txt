@@ -7,3 +7,6 @@
 -spawnen binnen zone beperken
 -sam skill level checken
 -F2 beperken
+-Tech combine veranderen naar command post
+-15min wachttijd voor initiele takeoff/slotblock?
+-smoke op HQ bij inzone?

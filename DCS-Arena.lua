@@ -12,6 +12,7 @@ Samresupplytimer = 6000
 UnitTable = {}
 
 UnitTable["tank"] = 10		-- MBT
+UnitTable["artillery"] = 10		-- Artillery
 UnitTable["aaa"] = 10		-- aaa 
 UnitTable["samsr"] = 20 	-- short range Sa-6 / Hawk
 UnitTable["sampd"] = 20		-- sam-point defence Sa-15 / Roland
